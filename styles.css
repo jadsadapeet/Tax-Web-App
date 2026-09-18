@@ -1,0 +1,17 @@
+/* STREAMING_CHUNK:Configuring base styles and print media rules... */
+body {
+font-family: 'Prompt', sans-serif;
+}
+
+@media print {
+.no-print {
+display: none !important;
+}
+.print-only {
+display: block !important;
+}
+body {
+background: white !important;
+color: black !important;
+}
+}

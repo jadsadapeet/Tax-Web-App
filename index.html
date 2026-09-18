@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกและจัดการภาษีขาย (Production-Ready)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <header class="bg-slate-800 border-b border-slate-700 shadow-md no-print sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2.5 rounded-xl shadow-inner">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-wide text-white flex items-center gap-2">
+                        ระบบภาษีขายความเร็วสูง & Auto-Fill
+                        <span class="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full font-normal">v2.0 Modular</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">กด <kbd class="bg-slate-700 px-1.5 py-0.5 rounded text-slate-200">Enter</kbd> บันทึกต่อเนื่อง &bull; <kbd class="bg-slate-700 px-1.5 py-0.5 rounded text-slate-200">F2</kbd> โฟกัสฟอร์ม</p>
+                </div>
+            </div>
+            <div class="flex items-center flex-wrap gap-3">
+                <button onclick="openCustomerModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 border border-slate-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    จัดการฐานข้อมูลบริษัท (<span id="customerCountBadge">0</span>)
+                </button>
+                <button onclick="openReportModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    พิมพ์รายงานภาษีขาย
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full no-print">
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700/60 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">ยอดขายรวมก่อนภาษี</p>
+                    <h3 id="statSubtotal" class="text-2xl font-bold text-white mt-1">0.00 <span class="text-sm font-normal text-slate-400">บาท</span></h3>
+                </div>
+                <div class="bg-blue-500/10 p-3.5 rounded-xl text-blue-400 border border-blue-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700/60 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">ภาษีมูลค่าเพิ่ม (VAT 7%)</p>
+                    <h3 id="statVat" class="text-2xl font-bold text-emerald-400 mt-1">0.00 <span class="text-sm font-normal text-slate-400">บาท</span></h3>
+                </div>
+                <div class="bg-emerald-500/10 p-3.5 rounded-xl text-emerald-400 border border-emerald-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" /></svg>
+                </div>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700/60 flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">ยอดรวมทั้งสิ้น (Grand Total)</p>
+                    <h3 id="statTotal" class="text-2xl font-bold text-indigo-400 mt-1">0.00 <span class="text-sm font-normal text-slate-400">บาท</span></h3>
+                </div>
+                <div class="bg-indigo-500/10 p-3.5 rounded-xl text-indigo-400 border border-indigo-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form and Table Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Entry Form -->
+            <div class="lg:col-span-1 bg-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700/60 h-fit sticky top-20">
+                <h2 id="formTitle" class="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-700 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    กรอกข้อมูลด่วน (Fast Entry)
+                </h2>
+                
+                <form id="taxForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="editIndex" value="-1">
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">วันที่ออกใบกำกับภาษี</label>
+                        <input type="date" id="taxDate" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-white">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">เลขที่ใบกำกับภาษี (รันอัตโนมัติ)</label>
+                        <input type="text" id="taxNo" placeholder="เช่น INV-2026-001" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-white font-mono">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">เลขประจำตัวผู้เสียภาษี (พิมพ์ค้นหาอัตโนมัติ)</label>
+                        <div class="relative">
+                            <input type="text" id="taxId" placeholder="กรอกเลข 13 หลัก" maxlength="13" oninput="onTaxIdInput(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-white font-mono">
+                            <div id="taxIdDropdown" class="absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-30 hidden max-h-48 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">ชื่อลูกค้า / บริษัท (Auto-fill)</label>
+                        <div class="relative">
+                            <input type="text" id="customerName" placeholder="พิมพ์ชื่อบริษัทเพื่อค้นหา" required oninput="onCustomerNameInput(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-white">
+                            <div id="customerDropdown" class="absolute left-0 right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-30 hidden max-h-48 overflow-y-auto"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">ที่อยู่ลูกค้า / บริษัท</label>
+                        <textarea id="customerAddress" rows="2" placeholder="ที่อยู่สำหรับออกใบกำกับภาษี" class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs text-white resize-none"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">มูลค่าสินค้า / บริการ (ก่อน VAT)</label>
+                        <input type="number" step="0.01" id="amount" placeholder="0.00" required oninput="calculateVat()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-white font-bold text-amber-400">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/60">
+                        <div>
+                            <span class="block text-[11px] font-medium text-slate-400">ภาษีมูลค่าเพิ่ม (7%)</span>
+                            <span id="calculatedVat" class="text-sm font-bold text-emerald-400">0.00</span>
+                        </div>
+                        <div>
+                            <span class="block text-[11px] font-medium text-slate-400">ยอดรวมทั้งสิ้น</span>
+                            <span id="calculatedTotal" class="text-sm font-bold text-indigo-400">0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" id="submitBtn" class="flex-grow bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            บันทึกรายการ (Enter)
+                        </button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium py-3 px-4 rounded-xl text-sm transition">ยกเลิก</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="lg:col-span-2 bg-slate-800 rounded-2xl shadow-lg border border-slate-700/60 flex flex-col overflow-hidden">
+                <div class="p-5 border-b border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                        รายการภาษีขายทั้งหมด
+                    </h2>
+                    <div class="w-full sm:w-auto flex gap-2">
+                        <input type="text" id="searchInput" oninput="renderTable()" placeholder="ค้นหาเลขที่, ชื่อลูกค้า..." class="w-full sm:w-64 px-3.5 py-2 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900 text-white">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto flex-grow">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/60 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-700">
+                                <th class="py-3 px-4">วันที่</th>
+                                <th class="py-3 px-4">เลขที่ใบกำกับ</th>
+                                <th class="py-3 px-4">ชื่อลูกค้า / บริษัท</th>
+                                <th class="py-3 px-4 text-right">มูลค่า (บาท)</th>
+                                <th class="py-3 px-4 text-right">VAT 7%</th>
+                                <th class="py-3 px-4 text-right">ยอดรวม</th>
+                                <th class="py-3 px-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="taxTableBody" class="divide-y divide-slate-700/50 text-sm text-slate-200"></tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="hidden py-16 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-slate-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                    <p class="text-slate-400 font-medium">ยังไม่มีข้อมูลรายการภาษีขาย</p>
+                    <p class="text-xs text-slate-500 mt-1">เริ่มกรอกข้อมูลทางด้านซ้ายเพื่อบันทึกรายการ</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Customer/Company Modal -->
+    <div id="customerModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                <h3 class="font-bold text-white flex items-center gap-2">จัดการฐานข้อมูลลูกค้า / บริษัท (Auto-fill Directory)</h3>
+                <button onclick="closeCustomerModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow space-y-6">
+                <form id="customerForm" onsubmit="handleCustomerSubmit(event)" class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                    <input type="hidden" id="customerEditId" value="">
+                    <h4 class="text-sm font-semibold text-indigo-400">เพิ่ม / แก้ไขข้อมูลบริษัทในระบบ</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">ชื่อบริษัท / ลูกค้า</label>
+                            <input type="text" id="dirName" placeholder="เช่น บริษัท ตัวอย่าง จำกัด" required class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">เลขประจำตัวผู้เสียภาษี (13 หลัก)</label>
+                            <input type="text" id="dirTaxId" placeholder="01055xxxxxxxx" maxlength="13" required class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm text-white font-mono">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">ที่อยู่บริษัท</label>
+                        <textarea id="dirAddress" rows="2" placeholder="ที่อยู่สำหรับออกใบกำกับภาษี" class="w-full px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs text-white resize-none"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2 pt-1">
+                        <button type="button" id="cancelCustomerBtn" onclick="resetCustomerForm()" class="hidden bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-medium transition">ยกเลิก</button>
+                        <button type="submit" id="saveCustomerBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-xl text-xs font-medium transition">บันทึกข้อมูลบริษัท</button>
+                    </div>
+                </form>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-800 text-slate-400 uppercase border-b border-slate-700">
+                                <th class="py-2.5 px-3">ชื่อบริษัท</th>
+                                <th class="py-2.5 px-3">เลขผู้เสียภาษี</th>
+                                <th class="py-2.5 px-3">ที่อยู่</th>
+                                <th class="py-2.5 px-3 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody" class="divide-y divide-slate-800 text-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-700 bg-slate-800 flex justify-end">
+                <button onclick="closeCustomerModal()" class="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-xl text-sm font-medium transition">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Invoice Modal -->
+    <div id="printModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                <h3 class="font-bold text-white">ตัวอย่างเอกสารใบกำกับภาษี / ใบเสร็จรับเงิน</h3>
+                <button onclick="closePrintModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+            </div>
+            <div class="p-8 overflow-y-auto flex-grow bg-slate-950" id="invoicePreviewContent"></div>
+            <div class="p-4 border-t border-slate-700 bg-slate-800 flex justify-end gap-3">
+                <button onclick="closePrintModal()" class="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-xl text-sm font-medium transition">ปิด</button>
+                <button onclick="window.print()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition">สั่งพิมพ์เอกสาร</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tax Report Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800">
+                <h3 class="font-bold text-white">รายงานภาษีขายอย่างเป็นทางการ (A4 Format)</h3>
+                <button onclick="closeReportModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+            </div>
+            <div class="p-8 overflow-y-auto flex-grow bg-slate-950" id="reportPreviewContent"></div>
+            <div class="p-4 border-t border-slate-700 bg-slate-800 flex justify-end gap-3">
+                <button onclick="closeReportModal()" class="px-4 py-2 border border-slate-600 text-slate-300 hover:bg-slate-700 rounded-xl text-sm font-medium transition">ปิด</button>
+                <button onclick="window.print()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition">พิมพ์รายงานภาษีขาย</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-400 no-print">
+        <p>ระบบบันทึกภาษีขายความเร็วสูงพร้อม Auto-fill &bull; ผลิตโดย Modular Architecture</p>
+    </footer>
+
+    <!-- Link external JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
