@@ -352,7 +352,7 @@ function clearAllRecords() {
         return;
     }
 
-    const firstConfirm = confirm(`คุณต้องการลบข้อมูลรายการภาษีขายทั้งหมดจำนวน ${taxRecords.length} รายการ ใช่หรือไม่?`);
+    const firstConfirm = confirm(`คุณต้องการลบข้อมูลรายการภาษีซื้อทั้งหมดจำนวน ${taxRecords.length} รายการ ใช่หรือไม่?`);
     if (!firstConfirm) return;
 
     const secondConfirm = confirm('⚠️ ยืนยันอีกครั้ง! การลบนี้จะไม่สามารถกู้คืนข้อมูลกลับมาได้ คุณแน่ใจหรือไม่ว่าต้องการลบทั้งหมด?');
@@ -390,7 +390,7 @@ function openReportModal() {
     content.innerHTML = `
         <div class="bg-white text-black p-6 rounded shadow font-sarabun max-w-4xl mx-auto">
             <div class="text-center mb-4 leading-normal">
-                <h2 class="text-base font-bold">รายงานภาษีขาย</h2>
+                <h2 class="text-base font-bold">รายงานภาษีซื้อ</h2>
                 <p class="text-xs">เดือนภาษี ${escapeHtml(headerConfig.reportMonth)}</p>
                 <p class="text-xs">ชื่อผู้ประกอบการ ${escapeHtml(headerConfig.taxPayer)}</p>
                 <p class="text-xs">เลขประจำตัวผู้เสียภาษี ${escapeHtml(headerConfig.taxId)}</p>
