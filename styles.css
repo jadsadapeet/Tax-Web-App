@@ -1,17 +1,87 @@
-/* STREAMING_CHUNK:Configuring base styles and print media rules... */
-body {
-font-family: 'Prompt', sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap');
+
+* {
+    font-family: 'Prompt', 'Sarabun', sans-serif;
+    box-sizing: border-box;
 }
 
+.font-sarabun {
+    font-family: 'Sarabun', sans-serif !important;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Number inputs clean look */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+    cursor: pointer;
+}
+
+/* Print Engine: จัดฟอร์มกระดาษ A4 สำหรับสรรพากร */
 @media print {
-.no-print {
-display: none !important;
-}
-.print-only {
-display: block !important;
-}
-body {
-background: white !important;
-color: black !important;
-}
+    body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    #printArea {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 8mm 10mm;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+
+    #printArea * {
+        color: #000000 !important;
+        border-color: #000000 !important;
+    }
+
+    table {
+        border-collapse: collapse !important;
+        width: 100% !important;
+    }
+
+    th, td {
+        border: 1px solid #000000 !important;
+        padding: 3px 5px !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 8mm;
+    }
 }
