@@ -332,7 +332,7 @@ function editRecord(idx) {
 
     document.getElementById('formTitle').innerHTML = `✍️ กำลังแก้ไขรายการ: <span class="text-amber-400 font-mono">${escapeHtml(r.taxNo)}</span>`;
     document.getElementById('submitBtn').innerText = 'บันทึกแก้ไข';
-    document.getElementById('cancelBtn').classList.remove('hidden');
+    document.getElementById('cancelBtn').classList.add('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -369,62 +369,117 @@ function clearAllRecords() {
 // ======================== รายงานสำหรับพิมพ์ (แบบสรรพากร) ========================
 function openReportModal() {
     const content = document.getElementById('reportPreviewContent');
-    let totalAmount = 0, totalVat = 0;
-    let rowsHtml = '';
+    const ITEMS_PER_PAGE = 33; // กำหนดจำนวนรายการต่อ 1 หน้ากระดาษ
+    let pagesHtml = '';
 
-    taxRecords.forEach((r) => {
-        totalAmount += r.amount;
-        totalVat += r.vat;
-        rowsHtml += `
-            <tr class="border-b border-black text-[12px] leading-tight">
-                <td class="border-r border-black py-1 px-1.5 text-center font-mono">${formatThaiDate(r.date)}</td>
-                <td class="border-r border-black py-1 px-1.5 text-center font-mono">${escapeHtml(r.taxNo)}</td>
-                <td class="border-r border-black py-1 px-2">${escapeHtml(r.customerName)}</td>
-                <td class="border-r border-black py-1 px-1.5 text-center font-mono">${escapeHtml(r.customerTaxId || '')}</td>
-                <td class="border-r border-black py-1 px-2 text-right font-mono">${r.amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td class="py-1 px-2 text-right font-mono">${r.vat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-            </tr>
-        `;
+    const totalPages = Math.ceil(taxRecords.length / ITEMS_PER_PAGE) || 1;
+
+    // คำนวณหายอดรวมทั้งสิ้นของทุกรายการเตรียมไว้สำหรับหน้าสุดท้าย
+    let grandTotalAmount = 0;
+    let grandTotalVat = 0;
+    taxRecords.forEach(r => {
+        grandTotalAmount += r.amount;
+        grandTotalVat += r.vat;
     });
 
-    content.innerHTML = `
-        <div class="bg-white text-black p-6 rounded shadow font-sarabun max-w-4xl mx-auto">
-            <div class="text-center mb-4 leading-normal">
-                <h2 class="text-base font-bold">รายงานภาษีซื้อ</h2>
-                <p class="text-xs">เดือนภาษี ${escapeHtml(headerConfig.reportMonth)}</p>
-                <p class="text-xs">ชื่อผู้ประกอบการ ${escapeHtml(headerConfig.taxPayer)}</p>
-                <p class="text-xs">เลขประจำตัวผู้เสียภาษี ${escapeHtml(headerConfig.taxId)}</p>
-                <p class="text-xs">ชื่อสถานประกอบการ ${escapeHtml(headerConfig.branch)}</p>
+    for (let page = 0; page < totalPages; page++) {
+        const startIdx = page * ITEMS_PER_PAGE;
+        const endIdx = startIdx + ITEMS_PER_PAGE;
+        const pageItems = taxRecords.slice(startIdx, endIdx);
+
+        let pageAmount = 0;
+        let pageVat = 0;
+        let rowsHtml = '';
+
+        pageItems.forEach((r) => {
+            pageAmount += r.amount;
+            pageVat += r.vat;
+            rowsHtml += `
+                <tr class="border-b border-black text-[12px] leading-tight">
+                    <td class="border-r border-black py-1 px-1.5 text-center font-mono">${formatThaiDate(r.date)}</td>
+                    <td class="border-r border-black py-1 px-1.5 text-center font-mono">${escapeHtml(r.taxNo)}</td>
+                    <td class="border-r border-black py-1 px-2">${escapeHtml(r.customerName)}</td>
+                    <td class="border-r border-black py-1 px-1.5 text-center font-mono">${escapeHtml(r.customerTaxId || '')}</td>
+                    <td class="border-r border-black py-1 px-2 text-right font-mono">${r.amount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="py-1 px-2 text-right font-mono">${r.vat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            `;
+        });
+
+        // ตรวจสอบว่าเป็นหน้าสุดท้ายหรือไม่ ถ้าใช่ให้แสดง "รวมทั้งสิ้น" พร้อมยอดรวมทั้งหมด
+        let footerHtml = '';
+        const isLastPage = (page === totalPages - 1);
+
+        if (isLastPage && totalPages > 1) {
+            // กรณีมีหลายหน้า และถึงหน้าสุดท้าย: แสดงยอดรวมหน้านั้น + ยอดรวมทั้งสิ้น
+            footerHtml = `
+                <tr class="border-t-2 border-black font-bold">
+                    <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวมหน้าที่ ${page + 1}</td>
+                    <td class="border-r border-black py-1.5 px-2 text-right font-mono">${pageAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="py-1.5 px-2 text-right font-mono">${pageVat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+                <tr class="border-t border-black font-bold bg-gray-100">
+                    <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวมทั้งสิ้น</td>
+                    <td class="border-r border-black py-1.5 px-2 text-right font-mono">${grandTotalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="py-1.5 px-2 text-right font-mono">${grandTotalVat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            `;
+        } else if (isLastPage && totalPages === 1) {
+            // กรณีมีหน้าเดียวจบ: แสดงคำว่า "รวม" หรือ "รวมทั้งสิ้น" บรรทัดเดียว
+            footerHtml = `
+                <tr class="border-t-2 border-black font-bold">
+                    <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวมทั้งสิ้น</td>
+                    <td class="border-r border-black py-1.5 px-2 text-right font-mono">${grandTotalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="py-1.5 px-2 text-right font-mono">${grandTotalVat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            `;
+        } else {
+            // กรณีเป็นหน้าแรกๆ (ยังไม่ถึงหน้าสุดท้าย)
+            footerHtml = `
+                <tr class="border-t-2 border-black font-bold">
+                    <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวมหน้าที่ ${page + 1}</td>
+                    <td class="border-r border-black py-1.5 px-2 text-right font-mono">${pageAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="py-1.5 px-2 text-right font-mono">${pageVat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+            `;
+        }
+
+        pagesHtml += `
+            <div class="page-container bg-white text-black p-6 rounded shadow font-sarabun max-w-4xl mx-auto mb-8 print:mb-0" style="page-break-after: always;">
+                <div class="text-center mb-4 leading-normal">
+                    <h2 class="text-base font-bold">รายงานภาษีซื้อ</h2>
+                    <p class="text-xs">เดือนภาษี ${escapeHtml(headerConfig.reportMonth)}</p>
+                    <p class="text-xs">ชื่อผู้ประกอบการ ${escapeHtml(headerConfig.taxPayer)}</p>
+                    <p class="text-xs">เลขประจำตัวผู้เสียภาษี ${escapeHtml(headerConfig.taxId)}</p>
+                    <p class="text-xs">ชื่อสถานประกอบการ ${escapeHtml(headerConfig.branch)}</p>
+                </div>
+
+                <table class="w-full border-collapse border border-black text-xs">
+                    <thead>
+                        <tr class="border-b border-black text-center font-semibold bg-gray-50">
+                            <th colspan="2" class="border-r border-black py-1">ใบกำกับภาษี</th>
+                            <th rowspan="2" class="border-r border-black py-1 px-2">ชื่อผู้ขายสินค้า/ผู้ให้บริการ</th>
+                            <th rowspan="2" class="border-r border-black py-1 px-2">เลขประจำตัวผู้เสียภาษีอากร<br>ของผู้ขายสินค้า</th>
+                            <th rowspan="2" class="border-r border-black py-1 px-2 text-right">มูลค่าสินค้า<br>หรือบริการ</th>
+                            <th rowspan="2" class="py-1 px-2 text-right">จำนวนเงิน<br>ภาษีมูลค่าเพิ่ม</th>
+                        </tr>
+                        <tr class="border-b border-black text-center font-semibold bg-gray-50">
+                            <th class="border-r border-black py-1 px-1.5 w-24">วัน เดือน ปี</th>
+                            <th class="border-r border-black py-1 px-1.5 w-32">เล่มที่/เลขที่</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                    <tfoot>
+                        ${footerHtml}
+                    </tfoot>
+                </table>
             </div>
+        `;
+    }
 
-            <table class="w-full border-collapse border border-black text-xs">
-                <thead>
-                    <tr class="border-b border-black text-center font-semibold bg-gray-50">
-                        <th colspan="2" class="border-r border-black py-1">ใบกำกับภาษี</th>
-                        <th rowspan="2" class="border-r border-black py-1 px-2">ชื่อผู้ขายสินค้า/ผู้ให้บริการ</th>
-                        <th rowspan="2" class="border-r border-black py-1 px-2">เลขประจำตัวผู้เสียภาษีอากร<br>ของผู้ขายสินค้า</th>
-                        <th rowspan="2" class="border-r border-black py-1 px-2 text-right">มูลค่าสินค้า<br>หรือบริการ</th>
-                        <th rowspan="2" class="py-1 px-2 text-right">จำนวนเงิน<br>ภาษีมูลค่าเพิ่ม</th>
-                    </tr>
-                    <tr class="border-b border-black text-center font-semibold bg-gray-50">
-                        <th class="border-r border-black py-1 px-1.5 w-24">วัน เดือน ปี</th>
-                        <th class="border-r border-black py-1 px-1.5 w-32">เล่มที่/เลขที่</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rowsHtml}
-                </tbody>
-                <tfoot>
-                    <tr class="border-t-2 border-black font-bold">
-                        <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวม</td>
-                        <td class="border-r border-black py-1.5 px-2 text-right font-mono">${totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                        <td class="py-1.5 px-2 text-right font-mono">${totalVat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    `;
-
+    content.innerHTML = pagesHtml;
     document.getElementById('reportModal').classList.remove('hidden');
 }
 
