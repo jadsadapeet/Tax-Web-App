@@ -369,7 +369,7 @@ function clearAllRecords() {
 // ======================== รายงานสำหรับพิมพ์ (แบบสรรพากร) ========================
 function openReportModal() {
     const content = document.getElementById('reportPreviewContent');
-    const ITEMS_PER_PAGE = 33; // กำหนดจำนวนรายการต่อ 1 หน้ากระดาษ
+    const ITEMS_PER_PAGE = 21; // กำหนดจำนวนรายการต่อ 1 หน้ากระดาษ
     let pagesHtml = '';
 
     const totalPages = Math.ceil(taxRecords.length / ITEMS_PER_PAGE) || 1;
