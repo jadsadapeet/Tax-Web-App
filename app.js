@@ -416,7 +416,7 @@ function openReportModal() {
                 </tbody>
                 <tfoot>
                     <tr class="border-t-2 border-black font-bold">
-                        <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวมหน้าที่ 1</td>
+                        <td colspan="4" class="border-r border-black py-1.5 px-3 text-center">รวม</td>
                         <td class="border-r border-black py-1.5 px-2 text-right font-mono">${totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         <td class="py-1.5 px-2 text-right font-mono">${totalVat.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
